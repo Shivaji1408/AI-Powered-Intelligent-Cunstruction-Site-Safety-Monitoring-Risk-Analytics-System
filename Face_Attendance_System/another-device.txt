@@ -1,0 +1,236 @@
+================================================================================
+  FACE ATTENDANCE SYSTEM — SETUP GUIDE FOR ANOTHER DEVICE
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  REQUIRED SOFTWARE (Install these first)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Node.js  (v18 or higher)
+     Download: https://nodejs.org/
+
+  2. Python  (v3.10 – 3.13)
+     Download: https://www.python.org/downloads/
+     ⚠ During install, check "Add Python to PATH"
+
+  3. MongoDB Community Server
+     Download: https://www.mongodb.com/try/download/community
+     Make sure the MongoDB service is running before starting the backend.
+
+  4. Git  (optional, to clone the repo)
+     Download: https://git-scm.com/
+
+  5. A working webcam (built-in or USB)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PROJECT STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Face_Attendance_System/
+  ├── backend/          ← Node.js + Express REST API + Socket.IO (port 5000)
+  ├── frontend/         ← React 18 + Vite dashboard (port 5173)
+  └── python-service/   ← Python face-recognition + webcam service
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  DEPENDENCIES LIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ── Backend (Node.js) ──────────────────────────────────────────────────────
+
+    express              ^4.18.2   Web framework
+    mongoose             ^7.5.0    MongoDB ODM
+    socket.io            ^4.6.2    Real-time WebSocket server
+    cors                 ^2.8.5    Cross-origin request handling
+    dotenv               ^16.3.1   Environment variable loader
+    multer               ^2.1.1    File upload handling (employee photos)
+    node-cron            ^3.0.2    Scheduled daily attendance reset
+    nodemon              ^3.0.1    Auto-restart in development (devDependency)
+
+  ── Frontend (React) ───────────────────────────────────────────────────────
+
+    react                ^18.2.0   UI library
+    react-dom            ^18.2.0   React DOM renderer
+    react-router-dom     ^6.18.0   Client-side routing
+    axios                ^1.6.0    HTTP client for API calls
+    socket.io-client     ^4.6.2    Real-time WebSocket client
+    recharts             ^2.9.0    Attendance analytics chart
+    vite                 ^5.0.0    Build tool / dev server
+    tailwindcss          ^3.3.5    Utility-first CSS framework
+    @vitejs/plugin-react ^4.1.1    Vite React plugin
+
+  ── Python Service ─────────────────────────────────────────────────────────
+
+    dlib-bin                       Pre-built dlib wheel (no CMake needed)
+    face-recognition     >=1.3.0   128-d face embedding & matching
+    face-recognition-models>=0.3.0 Pre-trained model weights
+    opencv-python        >=4.8.0   Webcam capture & image processing
+    numpy                >=1.24.0  Numerical computing (required by face_recognition)
+    requests             >=2.28.0  HTTP calls to Node backend API
+    python-socketio[client]>=5.8.0 WebSocket streaming to Node backend
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP-BY-STEP SETUP COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Open THREE separate terminal windows for the three services below.
+
+  ── STEP 1: Navigate to the project root ───────────────────────────────────
+
+    cd Face_Attendance_System
+
+
+  ── STEP 2: Backend setup & start ──────────────────────────────────────────
+
+    cd backend
+    npm install
+    npm run dev
+
+    Backend will start at: http://localhost:5000
+    You should see:  [MongoDB] Connected successfully
+                     [Server] Running on http://localhost:5000
+
+    ⚠ MongoDB must be running before this step.
+      Windows: open Services → start "MongoDB Server"
+      Or run:  net start MongoDB
+
+
+  ── STEP 3: Frontend setup & start (new terminal) ──────────────────────────
+
+    cd frontend
+    npm install
+    npm run dev
+
+    Dashboard will open at: http://localhost:5173
+
+
+  ── STEP 4: Python virtual environment & dependencies ──────────────────────
+
+    (Run from the project root: Face_Attendance_System/)
+
+    # Create virtual environment one level UP from the project folder
+    python -m venv .venv
+
+    # Activate it
+    # Windows PowerShell:
+    .venv\Scripts\Activate.ps1
+
+    # Windows CMD:
+    .venv\Scripts\activate.bat
+
+    # macOS / Linux:
+    source .venv/bin/activate
+
+    # Install dlib-bin FIRST (pre-built, no CMake required)
+    pip install dlib-bin
+
+    # Install the rest of the Python dependencies
+    pip install -r Face_Attendance_System/python-service/requirements.txt
+    pip install setuptools
+
+    # If you get a "pkg_resources" error, patch face_recognition_models:
+    # Open: .venv\Lib\site-packages\face_recognition_models\__init__.py
+    # Remove or comment out the line:  import pkg_resources
+
+
+  ── STEP 5: Start the Python face-recognition service (new terminal) ───────
+
+    # Make sure the venv is activated (see Step 4)
+    cd Face_Attendance_System/python-service
+
+    python face_recognition_service.py
+
+    You should see:
+      [Socket] Connected to Node backend ✓
+      [Info] Encoded N known face(s): [...]
+      [Info] Face-recognition service started. Press 'q' in the OpenCV window to quit.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ADDING EMPLOYEES (TRAINING IMAGES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Place each employee's face photo inside:
+    python-service/Training images/
+
+  File naming:  <EmployeeName>.jpg   (e.g. John.jpg, Alice.jpg)
+
+  After adding photos, restart the Python service (Step 5) so the new
+  face encodings are loaded.
+
+  Alternatively, use the "Add Employee" button on the dashboard — it uploads
+  the photo automatically and saves it to the Training images folder.
+  Still restart the Python service afterwards.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ENVIRONMENT VARIABLES  (optional overrides)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Create a file  backend/.env  to override defaults:
+
+    MONGODB_URI=mongodb://localhost:27017/face_attendance
+    PORT=5000
+
+  Create a file  python-service/.env  to override:
+
+    NODE_BACKEND_URL=http://localhost:5000
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  QUICK-START SUMMARY  (all services running in order)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Terminal 1 — Backend:
+    cd Face_Attendance_System/backend
+    npm install
+    npm run dev
+
+  Terminal 2 — Frontend:
+    cd Face_Attendance_System/frontend
+    npm install
+    npm run dev
+
+  Terminal 3 — Python service:
+    cd Face_Attendance_System          (project root)
+    python -m venv .venv
+    .venv\Scripts\Activate.ps1         (Windows PowerShell)
+    pip install dlib-bin
+    pip install -r Face_Attendance_System/python-service/requirements.txt
+    pip install setuptools
+    cd Face_Attendance_System/python-service
+    python face_recognition_service.py
+
+  Then open:  http://localhost:5173
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Problem: "dlib" fails to install / CMake error
+  Fix:     Install dlib-bin instead of dlib:
+             pip install dlib-bin
+
+  Problem: "pkg_resources not found" error from face_recognition_models
+  Fix:     Edit .venv\Lib\site-packages\face_recognition_models\__init__.py
+           Remove the line: import pkg_resources
+
+  Problem: MongoDB connection failed
+  Fix:     Start MongoDB service:  net start MongoDB  (Windows)
+           Or install and start MongoDB Community Server.
+
+  Problem: Python service says "Could not connect to backend"
+  Fix:     Make sure the backend (Terminal 1) is running BEFORE starting
+           the Python service.
+
+  Problem: Webcam not opening / black screen
+  Fix:     Check that no other app is using the webcam.
+           Try changing CAMERA_INDEX = 0 to 1 in face_recognition_service.py
+
+  Problem: ExecutionPolicy error when activating venv on Windows PowerShell
+  Fix:     Run:  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+================================================================================

@@ -1,0 +1,34 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Face Recognition Attendance System — Python Service Dependencies
+# Python 3.10 – 3.13 supported
+#
+# INSTALL ORDER (important on Windows):
+#   Step 1 — pre-built dlib wheel (no CMake needed):
+#       pip install dlib-bin
+#
+#   Step 2 — rest of the deps:
+#       pip install -r requirements.txt --no-deps face-recognition
+#       pip install opencv-python numpy requests "python-socketio[client]" setuptools
+#
+# OR simply run the one-liner setup included in the README.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Webcam capture and image processing
+opencv-python>=4.8.0
+
+# 128-d face embeddings (depends on dlib — install dlib-bin first on Windows)
+face-recognition>=1.3.0
+face-recognition-models>=0.3.0
+
+# Numerical computing (required by face_recognition)
+numpy>=1.24.0
+
+# HTTP calls to Node backend REST API
+requests>=2.28.0
+
+# WebSocket client — streams frames and events to Node backend
+python-socketio[client]>=5.8.0
+
+# Required by face_recognition_models on Python 3.12+
+setuptools>=65.0.0
+
